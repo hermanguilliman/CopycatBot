@@ -1,8 +1,8 @@
 {
     "api_id": 123456789,
     "api_hash": "abcdefg",
-    "source_chat_id": -1002541540273,
-    "dest_chat_id": -1002582691182
+    "source_chat_id": -1001111111111,
+    "dest_chat_id": -1002222222222
 }
 
 // переменовать в config.json

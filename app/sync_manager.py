@@ -60,9 +60,7 @@ class SyncManager:
                     )
                     processed_groups.add(message.grouped_id)
             elif message.id not in grouped_messages:
-                logger.info(
-                    f"Обработка одиночного медиа с msg_id: {message.id}"
-                )
+                logger.info(f"Обработка одиночного медиа с id: {message.id}")
                 await self.media_processor.process_single_media(message)
 
     async def monitor_new_files(self):
@@ -116,7 +114,5 @@ class SyncManager:
                 finally:
                     processed_groups.discard(message.grouped_id)
             else:
-                logger.info(
-                    f"Обработка одиночного медиа с msg_id: {message.id}"
-                )
+                logger.info(f"Обработка одиночного медиа с id: {message.id}")
                 await self.media_processor.process_single_media(message)
