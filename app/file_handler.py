@@ -2,16 +2,18 @@ import asyncio
 from pathlib import Path
 
 from loguru import logger
+from telethon import TelegramClient
 from telethon.errors import RPCError
+from telethon.tl.custom.message import Message
 
 
 class FileHandler:
-    def __init__(self, client, temp_dir):
+    def __init__(self, client: TelegramClient, temp_dir: Path):
         self.client = client
         self.temp_dir = temp_dir
 
     async def download_media_with_retry(
-        self, message, file_name, retries=3, delay=2
+        self, message: Message, file_name, retries=3, delay=2
     ):
         """Скачивание медиа с повторными попытками"""
         for attempt in range(retries):

@@ -1,13 +1,24 @@
 import asyncio
+from pathlib import Path
+from typing import cast
 
 from loguru import logger
-from telethon import events
+from telethon import TelegramClient, events
+from telethon.tl.custom.message import Message
 
+from .config import Config
+from .database import Database
 from .media_processor import MediaProcessor
 
 
 class SyncManager:
-    def __init__(self, client, config, db, temp_dir):
+    def __init__(
+        self,
+        client: TelegramClient,
+        config: Config,
+        db: Database,
+        temp_dir: Path,
+    ):
         self.client = client
         self.config = config
         self.db = db
@@ -26,6 +37,7 @@ class SyncManager:
         async for message in self.client.iter_messages(
             self.config.source_chat_id, reverse=True, min_id=last_processed_id
         ):
+            message = cast(Message, message)
             if message.id <= last_processed_id:
                 continue
 
@@ -38,6 +50,7 @@ class SyncManager:
 
         processed_groups = set()
         for message in messages_to_process:
+            message = cast(Message, message)
             if (
                 message.id in grouped_messages
                 and message.grouped_id not in processed_groups

@@ -1,20 +1,34 @@
 import asyncio
+from pathlib import Path
 
 from loguru import logger
-from telethon.tl.types import Document, MessageMediaPhoto
+from telethon import TelegramClient
+from telethon.tl.custom.message import Message
+from telethon.tl.types import (
+    Document,
+    MessageMediaPhoto,
+)
 
+from .config import Config
+from .database import Database
 from .file_handler import FileHandler
 
 
 class MediaProcessor:
-    def __init__(self, client, config, db, temp_dir):
+    def __init__(
+        self,
+        client: TelegramClient,
+        config: Config,
+        db: Database,
+        temp_dir: Path,
+    ):
         self.client = client
         self.config = config
         self.db = db
         self.temp_dir = temp_dir
         self.file_handler = FileHandler(client, temp_dir)
 
-    def _get_file_name(self, message):
+    def _get_file_name(self, message: Message):
         """Получение имени файла для медиа"""
         if isinstance(message.media, MessageMediaPhoto):
             return f"photo_{message.id}.jpg"
@@ -26,7 +40,7 @@ class MediaProcessor:
                     return attr.file_name
         return f"media_{message.id}"
 
-    async def process_single_media(self, message):
+    async def process_single_media(self, message: Message):
         """Обработка одиночного медиа"""
         try:
             file_name = self._get_file_name(message)
@@ -39,8 +53,12 @@ class MediaProcessor:
                 )
                 return
 
-            sent_message = await self.file_handler.send_file_with_retry(
-                self.config.dest_chat_id, file_path, caption=message.text or ""
+            sent_message: Message = (
+                await self.file_handler.send_file_with_retry(
+                    self.config.dest_chat_id,
+                    file_path,
+                    caption=message.text or "",
+                )
             )
 
             self.db.save_sync_state(
@@ -60,7 +78,9 @@ class MediaProcessor:
         except Exception as e:
             logger.error(f"Ошибка при обработке медиа {message.id}: {str(e)}")
 
-    async def process_media_group(self, messages, caption, grouped_id):
+    async def process_media_group(
+        self, messages: list[Message], caption, grouped_id
+    ):
         """Обработка медиагруппы"""
         files = []
         file_names = []
