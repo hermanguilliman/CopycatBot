@@ -54,5 +54,14 @@ class Database:
                 (source_msg_id, source_chat_id, dest_msg_id, file_name),
             )
 
+    def get_dest_message_id(self, message_id, source_chat_id):
+        """Получить ID сообщения в группе назначения для заданного исходного сообщения."""
+        cursor = self.db.execute(
+            "SELECT dest_message_id FROM sync_state WHERE message_id = ? AND source_chat_id = ?",
+            (message_id, source_chat_id),
+        )
+        result = cursor.fetchone()
+        return result[0] if result else None
+
     def __del__(self):
         self.db.close()

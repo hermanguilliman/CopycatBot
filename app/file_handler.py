@@ -34,7 +34,14 @@ class FileHandler:
         return None
 
     async def send_file_with_retry(
-        self, chat_id, file, caption="", album=False, retries=3, delay=2
+        self,
+        chat_id,
+        file,
+        caption="",
+        album=False,
+        reply_to=None,
+        retries=3,
+        delay=2,
     ):
         """Отправка файла с повторными попытками"""
         for attempt in range(retries):
@@ -47,7 +54,11 @@ class FileHandler:
                     if not Path(file).exists():
                         raise FileNotFoundError(f"Файл {file} не существует")
                 return await self.client.send_file(
-                    chat_id, file, caption=caption, album=album
+                    chat_id,
+                    file,
+                    caption=caption,
+                    album=album,
+                    reply_to=reply_to,
                 )
             except (RPCError, FileNotFoundError) as e:
                 logger.warning(

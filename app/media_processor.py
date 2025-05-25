@@ -53,11 +53,23 @@ class MediaProcessor:
                 )
                 return
 
+            # Проверяем, является ли сообщение ответом
+            reply_to = None
+            if message.reply_to_msg_id:
+                reply_to = self.db.get_dest_message_id(
+                    message.reply_to_msg_id, self.config.source_chat_id
+                )
+                if not reply_to:
+                    logger.debug(
+                        f"Не найдено dest_message_id для reply_to_msg_id={message.reply_to_msg_id}"
+                    )
+
             sent_message: Message = (
                 await self.file_handler.send_file_with_retry(
                     self.config.dest_chat_id,
                     file_path,
                     caption=message.text or "",
+                    reply_to=reply_to,
                 )
             )
 
@@ -106,11 +118,25 @@ class MediaProcessor:
                 await asyncio.sleep(0.5)
 
             if files:
+                # Проверяем, является ли первое сообщение группы ответом
+                reply_to = None
+                first_message = messages[0]
+                if first_message.reply_to_msg_id:
+                    reply_to = self.db.get_dest_message_id(
+                        first_message.reply_to_msg_id,
+                        self.config.source_chat_id,
+                    )
+                    if not reply_to:
+                        logger.debug(
+                            f"Не найдено dest_message_id для reply_to_msg_id={first_message.reply_to_msg_id}"
+                        )
+
                 sent_messages = await self.file_handler.send_file_with_retry(
                     self.config.dest_chat_id,
                     files,
                     caption=caption,
                     album=True,
+                    reply_to=reply_to,
                 )
                 sent_messages = (
                     sent_messages

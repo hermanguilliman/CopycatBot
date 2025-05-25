@@ -81,7 +81,7 @@ class SyncManager:
 
         @self.client.on(events.NewMessage(chats=self.config.source_chat_id))
         async def handler(event):
-            message = event.message
+            message: Message = event.message
             if not message.media or self.db.is_message_synced(message.id):
                 return
 
