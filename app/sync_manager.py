@@ -5,6 +5,7 @@ from typing import cast
 from loguru import logger
 from telethon import TelegramClient, events
 from telethon.tl.custom.message import Message
+from telethon.tl.types import User
 
 from .config import Config
 from .database import Database
@@ -39,6 +40,10 @@ class SyncManager:
         ):
             message = cast(Message, message)
             if message.id <= last_processed_id:
+                continue
+
+            # Сообщения от пользователей не нужны
+            if message.is_private or isinstance(message.sender, User):
                 continue
 
             if message.media and not self.db.is_message_synced(message.id):
@@ -80,9 +85,15 @@ class SyncManager:
         processed_groups = set()
 
         @self.client.on(events.NewMessage(chats=self.config.source_chat_id))
-        async def handler(event):
+        async def handler(event: events.NewMessage):
             message: Message = event.message
+
+            # Пропускаем сообщения, если они не содержат медиа или уже обработаны
             if not message.media or self.db.is_message_synced(message.id):
+                return
+
+            # Проверяем, что сообщение из группы или канала, а не от пользователя
+            if message.is_private or isinstance(message.sender, User):
                 return
 
             if message.grouped_id:
@@ -102,11 +113,15 @@ class SyncManager:
                         max_id=message.id + 20,
                         min_id=message.id - 20,
                     ):
+                        msg = cast(Message, msg)
                         if (
                             msg.grouped_id == message.grouped_id
                             and msg.id != message.id
                             and msg.media
                             and not self.db.is_message_synced(msg.id)
+                            and not (
+                                msg.is_private or isinstance(msg.sender, User)
+                            )
                         ):
                             media_group.append(msg)
 
